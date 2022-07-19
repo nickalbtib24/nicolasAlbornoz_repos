@@ -7,11 +7,6 @@ export class RepositoriesController {
 
     constructor(private repositoriesService: RepositoriesService) {}
 
-    @Get()
-    getRepositories() {
-        return this.repositoriesService.getRepositories();
-    }
-
     @Post('/:idTribe')
     createRepository(@Param('idTribe') idTribe: string, @Body() body: CreateRepositoryDto) {
         return this.repositoriesService.createRepository(body, parseInt(idTribe));

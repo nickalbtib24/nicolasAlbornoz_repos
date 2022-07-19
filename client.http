@@ -6,6 +6,8 @@ POST http://localhost:3001/organizations
 Content-Type: application/json
 
 {
+
+    "name": "org1",
     "status": 1
 }
 
@@ -38,10 +40,10 @@ POST http://localhost:3001/repositories/1
 Content-Type: application/json
 
 {
-    "name": "repo 1",
-    "state": "a",
+    "name": "repo 7",
+    "state": "E",
     "createTime": "2018-11-12 01:02:03.123456789",
-    "status": "a"
+    "status": "A"
 }
 
 ### Get Tribe repos
@@ -50,15 +52,16 @@ GET http://localhost:3001/tribes/repositories/1
 
 ### Get Tribe
 
-GET http://localhost:3001/tribes/1
+GET http://localhost:3001/tribes/2
 
 ### Creates a new Metric
-POST http://localhost:3001/metrics/1
+POST http://localhost:3001/metrics/6
 Content-Type: application/json
 
 {
-    "name": "repo 1",
-    "state": "a",
-    "createTime": "2018-11-12 01:02:03.123456789",
-    "status": "a"
+    "coverage": 13213,
+    "bugs": 56,
+    "vulnerabilities": 356563,
+    "hotspot":561,
+    "codeSmells": 26556
 }

@@ -1,26 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TribesService } from 'src/tribes/tribes.service';
+import { VerificationTypeService } from 'src/verification-type/verification-type.service';
 import { Repository } from 'typeorm';
 import { CreateRepositoryDto } from './dtos/create-repository.dto';
 import { RepositoryEntity } from './repositories.entity';
 
-type VerificationRepository = {
-    id: number,
-    state: number
-};
-
 @Injectable()
-export class RepositoriesService {
-
-    private mockVerificationRepositories: VerificationRepository[];
-  
+export class RepositoriesService {  
     constructor(
         @InjectRepository(RepositoryEntity) private repository: Repository<RepositoryEntity>,
-        private tribesService: TribesService
-    ) {
-        this.mockVerificationRepositories = [];
-    }
+        private tribesService: TribesService,
+        private verificationType: VerificationTypeService
+    ) {}
 
     /**
      * A method that creates a new repository and associates it to an existing tribe given by id
@@ -33,16 +25,9 @@ export class RepositoriesService {
         try {
             const tribe = await this.tribesService.findTribeById(idTribe);
             const repository = await this.repository.create(repositoryDto);
-
             repository.tribe = tribe;
-
             const newRepository = await this.repository.save(repository);
-
-            this.mockVerificationRepositories.push({
-                id: repository.idRepository,
-                state: Math.floor(Math.random() * (606 - 604 + 1) + 604)
-            } as VerificationRepository)
-
+            this.verificationType.createRepositoryVerificationType(newRepository.idRepository);
             return newRepository;
         } catch (error) {
             throw error;
@@ -61,10 +46,6 @@ export class RepositoriesService {
         }
 
         return repository;
-    }
-
-    getRepositories() {
-        return this.mockVerificationRepositories;
     }
 
 }

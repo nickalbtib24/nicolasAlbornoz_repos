@@ -11,6 +11,7 @@ import { Tribe } from './tribes/tribes.entity';
 import { RepositoryEntity } from './repositories/repositories.entity';
 import { Metric } from './metrics/metrics.entity';
 import { APP_PIPE } from '@nestjs/core';
+import { VerificationTypeModule } from './verification-type/verification-type.module';
 
 @Module({
   imports: [
@@ -27,13 +28,12 @@ import { APP_PIPE } from '@nestjs/core';
         RepositoryEntity,
         Metric
       ],
-      synchronize: true,
-      logging: true
+      synchronize: true
     }),
     OrganizationsModule, 
     TribesModule, 
     RepositoriesModule, 
-    MetricsModule
+    MetricsModule, VerificationTypeModule
   ],
   controllers: [AppController],
   providers: [
