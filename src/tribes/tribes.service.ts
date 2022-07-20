@@ -1,18 +1,35 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrganizationsService } from 'src/organizations/organizations.service';
+import { VerificationTypeService } from 'src/verification-type/verification-type.service';
 import { Repository, SimpleConsoleLogger } from 'typeorm';
 import { CreateTribeDto } from './dtos/create-tribe.dto';
 import { Tribe } from './tribes.entity';
-import {getConnection} from "typeorm";
-import { RepositoryEntity } from 'src/repositories/repositories.entity';
+
+enum States {
+    E = 'Enabled',
+    D = 'Disabled',
+    A = 'Archived'
+}
+
+enum Status {
+    I = 'Inactive',
+    A = 'Active'
+}
 
 @Injectable()
 export class TribesService {
 
+    private verificationTypes = new Map<number, string>([
+        [604, 'Verificado'],
+        [605, 'En espera'],
+        [606, 'Aprobado']
+    ]);
+
     constructor(
         @InjectRepository(Tribe) private repository: Repository<Tribe>,
-        private organizationService: OrganizationsService) {}
+        private organizationService: OrganizationsService,
+        private verificationStateService: VerificationTypeService) {}
 
     
     /**
@@ -49,17 +66,33 @@ export class TribesService {
 
     async getTribeRepositories(idTribe: number) {
 
+        const tribe = await this.repository.findOne({
+            where: {
+                idTribe
+            }
+        });
+
+        if (!tribe) {
+            throw new NotFoundException('La Tribu no se encuentra registrada');
+        }  
+
         const repositories = await this.repository.query(`
             SELECT r.id_repository AS "id", r."name" AS "name", t."name" AS "tribe", o."name" AS "organization", m.coverage, m."codeSmells", m.bugs, m.vulnerabilities, m.hotspot, r.state from tribe t
-            left join repository_entity r on t.id_tribe = r."tribeIdTribe"
-            left join metric m on m."repositoryIdRepository" = r.id_repository
-            left join organization o on o.id_organization = t."organizationIdOrganization"
-            where r."tribeIdTribe" = $1;
-        `, [idTribe]);
+                left join repository_entity r on t.id_tribe = r."tribeIdTribe"
+                left join metric m on m."repositoryIdRepository" = r.id_repository
+                left join organization o on o.id_organization = t."organizationIdOrganization"
+            where r."tribeIdTribe" = $1 AND m.coverage > 75 AND r.state = 'E';
+        `, [idTribe]) as [];
 
-        if (!repositories) {
-            throw new NotFoundException('La Tribu no se encuentra registrada');
+        if (!repositories.length) {
+            throw new NotFoundException('La Tribu no tiene repositorios que cumplan con la cobertura necesaria');
         }       
+
+        repositories.map((repo: any) => {
+            const verificationType: any = this.verificationStateService.getRepositoryVerificationType(repo.id);
+            repo.verificationState = this.verificationTypes.get(verificationType.state);
+        });
+
         return { repositories };
     }
 

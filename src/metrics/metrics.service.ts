@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RepositoriesService } from 'src/repositories/repositories.service';
 import { Repository } from 'typeorm';
@@ -17,9 +17,10 @@ export class MetricsService {
         try {
             const repository = await this.repositoriesService.findRepositoryById(idRepository);
             const metric = await this.repository.create(metricDto);
-
+            if (!metric.repository) {
+                throw new BadRequestException('There is already a metric assigned to the repository.');
+            }
             metric.repository = repository;
-            console.log(metric);
             const newMetric = await this.repository.save(metric);
             return metric
         } catch (error) {
